@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from fpdf import FPDF
 from UI.Ui_main_ui import Ui_MainWindow
 import sys
+from datetime import date
 
 
 class Main_UI(QtWidgets.QMainWindow):
@@ -10,6 +11,7 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.init_UI()
+        self.print_data = []
 
     def init_UI(self):
         self.ui.warranty_combo.addItems(
@@ -51,6 +53,9 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.elements_view.addItem(
             f'{item_name}/{item_serial}/{item_warranty}/{item_price}'
         )
+        self.print_data.append(
+            f'{item_name}/{item_serial}/{item_warranty}/{item_price}'
+        )
         self.ui.name_edit.clear()
         self.ui.serial_edit.clear()
         self.ui.warranty_combo.setCurrentIndex(0)
@@ -58,6 +63,7 @@ class Main_UI(QtWidgets.QMainWindow):
 
     def delete_event(self):
         item_index = self.ui.elements_view.currentIndex().row()
+        self.print_data.__delitem__(item_index)
         self.ui.elements_view.takeItem(item_index)
 
     def check(self, trouble):
@@ -76,7 +82,16 @@ class Main_UI(QtWidgets.QMainWindow):
 
     def print(self):
         pdf = FPDF(orientation='P', unit='mm', format='A5')
-        pass
+        pdf.set_font('times', '', 12)
+        for item in self.print_data:
+            data = item.split('/')
+            pdf.add_page()
+            pdf.cell(40, 10, f'Вирiб {data[0]}', ln=True)
+            pdf.cell(40, 10, f'Серiйний номер: {data[1]}', ln=True)
+            pdf.cell(40, 10, f'Термiн гарантi {data[2][0]} мiсяцiв', ln=True)
+            #pdf.cell(40, 10, f'Дата продажу {date()}', ln=True)
+
+        pdf.output('pdf_1.pdf')   
 
 
 if __name__ == '__main__':
