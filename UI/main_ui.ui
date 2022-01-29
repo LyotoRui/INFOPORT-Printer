@@ -157,7 +157,7 @@
      <string>PushButton</string>
     </property>
    </widget>
-   <widget class="QListView" name="elements_view">
+   <widget class="QListWidget" name="elements_view">
     <property name="geometry">
      <rect>
       <x>410</x>
