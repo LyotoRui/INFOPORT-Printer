@@ -32,17 +32,23 @@ class Main_UI(QtWidgets.QMainWindow):
 
     def add_event(self):
         item_name = self.ui.name_edit.text()
-        if len(item_name) > 0:
-            pass
-        else:
+        if len(item_name) < 1:
             self.check('empty_name')
             return
-        item_serial = self.ui.serial_edit.text().upper()
-        if len(item_serial) > 0:
-            pass
+        elif len(item_name) > 40:
+            self.check('long_name')
+            return
         else:
+            pass
+        item_serial = self.ui.serial_edit.text().upper()
+        if len(item_serial) < 1:
             self.check('empty_serial')
             return
+        elif len(item_serial) > 30:
+            self.check('long_serial')
+            return
+        else:
+            pass
         item_warranty = self.ui.warranty_combo.currentText()
         item_price = self.ui.price_edit.text()
         if len(item_price) < 1:
@@ -73,7 +79,9 @@ class Main_UI(QtWidgets.QMainWindow):
     def check(self, trouble):
         pattern = {
             'empty_name': 'Имя не может быть пустым.',
+            'long_name': 'Имя не может быть больше 40 символов.',
             'empty_serial': 'Серийный номер не может быть пустым.',
+            'long_serial': 'Серийный номер не может быть больше 30 символов.',
             'empty_price': 'Цена не может быть пустой.',
             'letters_in_price': 'Цена может состоять только из цифр.'
         }
