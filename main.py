@@ -1,11 +1,12 @@
-import os
-from PyQt5 import QtCore, QtGui, QtWidgets
-from fpdf import FPDF
-from UI.Ui_main_ui import Ui_MainWindow
 import sys
 from datetime import datetime
-from PyQt5.QtPrintSupport import QPrinter, QPrintDialog,\
-    QPrintPreviewDialog
+
+from fpdf import FPDF
+from num2words import num2words
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
+
+from UI.Ui_main_ui import Ui_MainWindow
 
 
 class Main_UI(QtWidgets.QMainWindow):
@@ -95,20 +96,22 @@ class Main_UI(QtWidgets.QMainWindow):
             pdf.cell(40, 10, f'Серiйний номер: {data[1]}', ln=True)
             pdf.cell(40, 10, f'Гарантiйний термiн: {data[2][0]} мiс', ln=True)
             pdf.cell(40, 10, f'Дата продажу: {datetime.today().date()}', ln=True)
-            pdf.cell(40, 10, f'Продавець                           _________________ (пiдпис)', ln=True)
-            pdf.cell(40, 10, f'Цiна: {data[3]} грн.')
+            pdf.cell(40, 10, f'Продавець:{" " * 30}{"_" * 20} (пiдпис)', ln=True)
+            pdf.cell(40, 10, f'Цiна: {data[3]}.00 грн.', ln=True)
+            pdf.cell(40, 10, f'{num2words(data[3], lang="uk")} грн. 00 коп.')
         pdf.output('temp.pdf')
         self.ui.elements_view.clear()
-        os.system("lpr -P HP LaserJet P2055d UPD PCL 6 temp.pdf")
+        self.file_print()
     
-    def print_file(self):
+    def file_print(self):
         printer = QPrinter(QPrinter.HighResolution)
         dialog = QPrintDialog(printer, self)
- 
- 
+        file = 'temp.pdf'
+        elem = QtGui.QTextDocument(file)
         if dialog.exec_() == QPrintDialog.Accepted:
-            self.textEdit.print_(printer)
-
+            elem.print_(printer)
+        else:
+            return
 
 
 if __name__ == '__main__':
