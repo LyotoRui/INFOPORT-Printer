@@ -1,8 +1,11 @@
+import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from fpdf import FPDF
 from UI.Ui_main_ui import Ui_MainWindow
 import sys
-from datetime import date
+from datetime import datetime
+from PyQt5.QtPrintSupport import QPrinter, QPrintDialog,\
+    QPrintPreviewDialog
 
 
 class Main_UI(QtWidgets.QMainWindow):
@@ -82,16 +85,30 @@ class Main_UI(QtWidgets.QMainWindow):
 
     def print(self):
         pdf = FPDF(orientation='P', unit='mm', format='A5')
-        pdf.set_font('times', '', 12)
+        pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)
+        pdf.set_font('DejaVu', '', 14)
         for item in self.print_data:
             data = item.split('/')
             pdf.add_page()
-            pdf.cell(40, 10, f'Вирiб {data[0]}', ln=True)
+            pdf.cell(40, 10, f'Вирiб:', ln=True)
+            pdf.cell(40, 10, f'{data[0]}', ln=True)
             pdf.cell(40, 10, f'Серiйний номер: {data[1]}', ln=True)
-            pdf.cell(40, 10, f'Термiн гарантi {data[2][0]} мiсяцiв', ln=True)
-            #pdf.cell(40, 10, f'Дата продажу {date()}', ln=True)
+            pdf.cell(40, 10, f'Гарантiйний термiн: {data[2][0]} мiс', ln=True)
+            pdf.cell(40, 10, f'Дата продажу: {datetime.today().date()}', ln=True)
+            pdf.cell(40, 10, f'Продавець                           _________________ (пiдпис)', ln=True)
+            pdf.cell(40, 10, f'Цiна: {data[3]} грн.')
+        pdf.output('temp.pdf')
+        self.ui.elements_view.clear()
+        os.system("lpr -P HP LaserJet P2055d UPD PCL 6 temp.pdf")
+    
+    def print_file(self):
+        printer = QPrinter(QPrinter.HighResolution)
+        dialog = QPrintDialog(printer, self)
+ 
+ 
+        if dialog.exec_() == QPrintDialog.Accepted:
+            self.textEdit.print_(printer)
 
-        pdf.output('pdf_1.pdf')   
 
 
 if __name__ == '__main__':
