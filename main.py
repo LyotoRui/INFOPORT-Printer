@@ -7,6 +7,7 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
 
 from UI.Ui_main_ui import Ui_MainWindow
+import docx
 
 
 class Main_UI(QtWidgets.QMainWindow):
@@ -61,10 +62,10 @@ class Main_UI(QtWidgets.QMainWindow):
         else:
             pass
         self.ui.elements_view.addItem(
-            f'{item_name}/{item_serial}/{item_warranty}/{item_price}'
+            f'{item_name}#{item_serial}#{item_warranty}#{item_price}'
         )
         self.print_data.append(
-            f'{item_name}/{item_serial}/{item_warranty}/{item_price}'
+            f'{item_name}#{item_serial}#{item_warranty}#{item_price}'
         )
         self.ui.name_edit.clear()
         self.ui.serial_edit.clear()
@@ -83,7 +84,8 @@ class Main_UI(QtWidgets.QMainWindow):
             'empty_serial': 'Серийный номер не может быть пустым.',
             'long_serial': 'Серийный номер не может быть больше 30 символов.',
             'empty_price': 'Цена не может быть пустой.',
-            'letters_in_price': 'Цена может состоять только из цифр.'
+            'letters_in_price': 'Цена может состоять только из цифр.',
+            'pdf_opened': 'Сперва нужно закрыть PDF файл'
         }
         error = QtWidgets.QMessageBox()
         error.setIcon(QtWidgets.QMessageBox.Warning)
@@ -93,23 +95,28 @@ class Main_UI(QtWidgets.QMainWindow):
         error.exec_()
 
     def print(self):
-        pdf = FPDF(orientation='P', unit='mm', format='A5')
-        pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)
-        pdf.set_font('DejaVu', '', 14)
-        for item in self.print_data:
-            data = item.split('/')
-            pdf.add_page()
-            pdf.cell(40, 10, f'Вирiб:', ln=True)
-            pdf.cell(40, 10, f'{data[0]}', ln=True)
-            pdf.cell(40, 10, f'Серiйний номер: {data[1]}', ln=True)
-            pdf.cell(40, 10, f'Гарантiйний термiн: {data[2][0]} мiс', ln=True)
-            pdf.cell(40, 10, f'Дата продажу: {datetime.today().date()}', ln=True)
-            pdf.cell(40, 10, f'Продавець:{" " * 30}{"_" * 20} (пiдпис)', ln=True)
-            pdf.cell(40, 10, f'Цiна: {data[3]}.00 грн.', ln=True)
-            pdf.cell(40, 10, f'{num2words(data[3], lang="uk")} грн. 00 коп.')
-        pdf.output('temp.pdf')
-        self.ui.elements_view.clear()
-        self.file_print()
+        try:
+            pdf = FPDF(orientation='P', unit='mm', format='A5')
+            pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)
+            pdf.set_font('DejaVu', '', 14)
+            for item in self.print_data:
+                data = item.split('#')
+                pdf.add_page()
+                pdf.cell(40, 10, f'Вирiб:', ln=True)
+                pdf.cell(40, 10, f'{data[0]}', ln=True)
+                pdf.cell(40, 10, f'Серiйний номер: {data[1]}', ln=True)
+                pdf.cell(40, 10, f'Гарантiйний термiн: {data[2][0]} мiс', ln=True)
+                pdf.cell(40, 10, f'Дата продажу: {datetime.today().date()}', ln=True)
+                pdf.cell(40, 10, f'Продавець:{" " * 30}{"_" * 20} (пiдпис)', ln=True)
+                pdf.cell(40, 10, f'Цiна: {data[3]}.00 грн.', ln=True)
+                pdf.cell(40, 10, f'{num2words(data[3], lang="uk")} грн. 00 коп.')
+            pdf.output('temp.pdf')
+            self.ui.elements_view.clear()
+            self.file_print()
+        except PermissionError:
+            self.check('pdf_opened')
+            return
+
     
     def file_print(self):
         printer = QPrinter(QPrinter.HighResolution)
