@@ -9,7 +9,7 @@ from pdf2image import convert_from_path
 from PIL.ImageQt import ImageQt
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPainter, QKeySequence
+from PyQt5.QtGui import QKeySequence, QPainter
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt5.QtWidgets import QShortcut
 
@@ -24,7 +24,7 @@ class Main_UI(QtWidgets.QMainWindow):
         self.init_UI()
         self.print_data = []
 
-    def init_UI(self):
+    def init_UI(self) -> None:
         self.ui.warranty_combo.addItems(
             [
                 '1 месяц',
@@ -40,7 +40,7 @@ class Main_UI(QtWidgets.QMainWindow):
         self.del_shortcut = QShortcut(QKeySequence('Shift+Del'), self)
         self.del_shortcut.activated.connect(self.delete_event)
 
-    def add_event(self):
+    def add_event(self) -> None: #Event to add item into QListWidget (only after pre-check)
         if self.check() is True:
             pass
         else:
@@ -60,7 +60,7 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.warranty_combo.setCurrentIndex(0)
         self.ui.price_edit.clear()
 
-    def edit_event(self):
+    def edit_event(self) -> None: #Event for edit_button
         data = self.ui.elements_view.currentItem().text().split('#')
         self.ui.name_edit.setText(data[0])
         self.ui.serial_edit.setText(data[1])
@@ -69,7 +69,7 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.add_button.setVisible(False)
         self.ui.edit_button.setVisible(True)
 
-    def edit(self):
+    def edit(self) -> None: #Edit item in QListWidget
         index = self.ui.elements_view.currentRow()
         item = self.ui.elements_view.currentItem()
         if self.check() is True:
@@ -93,12 +93,12 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.add_button.setVisible(True)
         self.ui.edit_button.setVisible(False)
 
-    def delete_event(self):
+    def delete_event(self) -> None: #Event to delete item from QListWidget
         item_index = self.ui.elements_view.currentIndex().row()
         self.print_data.__delitem__(item_index)
         self.ui.elements_view.takeItem(item_index)
 
-    def check(self):
+    def check(self) -> bool: #Pre-check event to except mistakes in item`s description
         if len(self.ui.name_edit.text()) < 1:
             self.show_error('empty_name')
             return False
@@ -120,7 +120,7 @@ class Main_UI(QtWidgets.QMainWindow):
         else:
             return True
 
-    def show_error(self, trouble):
+    def show_error(self, trouble) -> None: #Execute message box show what`s wrong
         pattern = {
             'empty_name': 'Имя не может быть пустым.',
             'long_name': 'Имя не может быть больше 40 символов.',
@@ -137,7 +137,7 @@ class Main_UI(QtWidgets.QMainWindow):
         error.setText(pattern[trouble])
         error.exec_()
 
-    def create_temp_file(self):
+    def create_temp_file(self) -> None: #Creating temp file for print event
         try:
             pdf = FPDF(orientation='P', unit='mm', format='A5')
             pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)
@@ -160,7 +160,7 @@ class Main_UI(QtWidgets.QMainWindow):
                     )
                 pdf.cell(
                     40, 10,
-                    f'Продавець:{" " * 30}{"_" * 20} (пiдпис)',
+                    f'Продавець:{" " * 25}{"_" * 20} (пiдпис)',
                     ln=True
                     )
                 pdf.cell(
@@ -180,7 +180,7 @@ class Main_UI(QtWidgets.QMainWindow):
             self.check('pdf_opened')
             return
 
-    def print_file(self):
+    def print_file(self) -> None: #File print event
         printer = QPrinter(QPrinter.HighResolution)
         printer.setPaperSize(QPrinter.A5)
         printer.setPageSize(QPrinter.A5)
@@ -189,7 +189,7 @@ class Main_UI(QtWidgets.QMainWindow):
             with tempfile.TemporaryDirectory() as path:
                 images = convert_from_path(
                     'temp.pdf',
-                    dpi=300,
+                    dpi=600,
                     output_folder=path,
                     poppler_path='C:\\poppler-0.68.0\\bin'
                     )
