@@ -8,7 +8,7 @@ from num2words import num2words
 from pdf2image import convert_from_path
 from PIL.ImageQt import ImageQt
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QKeySequence
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
 from PyQt5.QtWidgets import QShortcut
@@ -33,10 +33,10 @@ class Main_UI(QtWidgets.QMainWindow):
                 '12 месяцев'
             ]
         )
-        self.ui.print_button.clicked.connect(self.print)
+        self.ui.print_button.clicked.connect(self.create_temp_file)
         self.ui.add_button.clicked.connect(self.add_event)
-        #self.ui.elements_view.itemDoubleClicked.connect(self.delete_event)
-        self.del_shortcut =  QShortcut(QKeySequence('Shift+Del'), self)
+        self.ui.elements_view.itemDoubleClicked.connect(self.edit_event)
+        self.del_shortcut = QShortcut(QKeySequence('Shift+Del'), self)
         self.del_shortcut.activated.connect(self.delete_event)
 
     def add_event(self):
@@ -63,7 +63,7 @@ class Main_UI(QtWidgets.QMainWindow):
         if len(item_price) < 1:
             self.check('empty_price')
             return
-        elif item_price.isdigit() == False:
+        elif item_price.isdigit() is False:
             self.check('letters_in_price')
             self.ui.price_edit.clear()
             return
@@ -79,6 +79,9 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.serial_edit.clear()
         self.ui.warranty_combo.setCurrentIndex(0)
         self.ui.price_edit.clear()
+
+    def edit_event(self):
+        pass
 
     def delete_event(self):
         item_index = self.ui.elements_view.currentIndex().row()
@@ -102,7 +105,7 @@ class Main_UI(QtWidgets.QMainWindow):
         error.setText(pattern[trouble])
         error.exec_()
 
-    def print(self):
+    def create_temp_file(self):
         try:
             pdf = FPDF(orientation='P', unit='mm', format='A5')
             pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)
@@ -110,30 +113,54 @@ class Main_UI(QtWidgets.QMainWindow):
             for item in self.print_data:
                 data = item.split('#')
                 pdf.add_page()
-                pdf.cell(40, 10, f'Вирiб:', ln=True)
+                pdf.cell(40, 10, 'Вирiб:', ln=True)
                 pdf.cell(40, 10, f'{data[0]}', ln=True)
                 pdf.cell(40, 10, f'Серiйний номер: {data[1]}', ln=True)
-                pdf.cell(40, 10, f'Гарантiйний термiн: {data[2][0]} мiс', ln=True)
-                pdf.cell(40, 10, f'Дата продажу: {datetime.today().date()}', ln=True)
-                pdf.cell(40, 10, f'Продавець:{" " * 30}{"_" * 20} (пiдпис)', ln=True)
-                pdf.cell(40, 10, f'Цiна: {data[3]}.00 грн.', ln=True)
-                pdf.cell(40, 10, f'{num2words(data[3], lang="uk")} грн. 00 коп.')
+                pdf.cell(
+                    40, 10,
+                    f'Гарантiйний термiн: {data[2][0]} мiс',
+                    ln=True
+                    )
+                pdf.cell(
+                    40, 10,
+                    f'Дата продажу: {datetime.today().date()}',
+                    ln=True
+                    )
+                pdf.cell(
+                    40, 10,
+                    f'Продавець:{" " * 30}{"_" * 20} (пiдпис)',
+                    ln=True
+                    )
+                pdf.cell(
+                    40, 10,
+                    f'Цiна: {data[3]}.00 грн.',
+                    ln=True
+                    )
+                pdf.cell(
+                    40, 10,
+                    f'{num2words(data[3], lang="uk")} грн. 00 коп.'
+                    )
             pdf.output('temp.pdf')
             self.ui.elements_view.clear()
-            self.file_print()
+            self.print_file()
             os.remove('temp.pdf')
         except PermissionError:
             self.check('pdf_opened')
             return
 
-    def file_print(self):
+    def print_file(self):
         printer = QPrinter(QPrinter.HighResolution)
         printer.setPaperSize(QPrinter.A5)
         printer.setPageSize(QPrinter.A5)
         dialog = QPrintDialog(printer, self)
         if dialog.exec_() == QPrintDialog.Accepted:
             with tempfile.TemporaryDirectory() as path:
-                images = convert_from_path('temp.pdf', dpi=300, output_folder=path, poppler_path='C:\\poppler-0.68.0\\bin')
+                images = convert_from_path(
+                    'temp.pdf',
+                    dpi=300,
+                    output_folder=path,
+                    poppler_path='C:\\poppler-0.68.0\\bin'
+                    )
                 painter = QPainter()
                 painter.begin(printer)
                 for i, image in enumerate(images):
@@ -141,7 +168,11 @@ class Main_UI(QtWidgets.QMainWindow):
                         printer.newPage()
                     rect = painter.viewport()
                     qtImage = ImageQt(image)
-                    qtImageScaled = qtImage.scaled(rect.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    qtImageScaled = qtImage.scaled(
+                        rect.size(),
+                        Qt.KeepAspectRatio,
+                        Qt.SmoothTransformation
+                        )
                     painter.drawImage(rect, qtImageScaled)
                 painter.end()
 
