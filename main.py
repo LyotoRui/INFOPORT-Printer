@@ -9,8 +9,9 @@ from pdf2image import convert_from_path
 from PIL.ImageQt import ImageQt
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QPainter, QKeySequence
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
+from PyQt5.QtWidgets import QShortcut
 
 from UI.Ui_main_ui import Ui_MainWindow
 
@@ -34,7 +35,9 @@ class Main_UI(QtWidgets.QMainWindow):
         )
         self.ui.print_button.clicked.connect(self.print)
         self.ui.add_button.clicked.connect(self.add_event)
-        self.ui.elements_view.itemDoubleClicked.connect(self.delete_event)
+        #self.ui.elements_view.itemDoubleClicked.connect(self.delete_event)
+        self.del_shortcut =  QShortcut(QKeySequence('Shift+Del'), self)
+        self.del_shortcut.activated.connect(self.delete_event)
 
     def add_event(self):
         item_name = self.ui.name_edit.text()
@@ -123,7 +126,6 @@ class Main_UI(QtWidgets.QMainWindow):
             self.check('pdf_opened')
             return
 
-    
     def file_print(self):
         printer = QPrinter(QPrinter.HighResolution)
         printer.setPaperSize(QPrinter.A5)
