@@ -1,13 +1,18 @@
+import os
 import sys
+import tempfile
 from datetime import datetime
 
 from fpdf import FPDF
 from num2words import num2words
+from pdf2image import convert_from_path
+from PIL.ImageQt import ImageQt
 from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QPainter
 from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
 
 from UI.Ui_main_ui import Ui_MainWindow
-import docx
 
 
 class Main_UI(QtWidgets.QMainWindow):
@@ -113,6 +118,7 @@ class Main_UI(QtWidgets.QMainWindow):
             pdf.output('temp.pdf')
             self.ui.elements_view.clear()
             self.file_print()
+            os.remove('temp.pdf')
         except PermissionError:
             self.check('pdf_opened')
             return
@@ -120,13 +126,22 @@ class Main_UI(QtWidgets.QMainWindow):
     
     def file_print(self):
         printer = QPrinter(QPrinter.HighResolution)
+        printer.setPaperSize(QPrinter.A5)
+        printer.setPageSize(QPrinter.A5)
         dialog = QPrintDialog(printer, self)
-        file = 'temp.pdf'
-        elem = QtGui.QTextDocument(file)
         if dialog.exec_() == QPrintDialog.Accepted:
-            elem.print_(printer)
-        else:
-            return
+            with tempfile.TemporaryDirectory() as path:
+                images = convert_from_path('temp.pdf', dpi=300, output_folder=path, poppler_path='C:\\poppler-0.68.0\\bin')
+                painter = QPainter()
+                painter.begin(printer)
+                for i, image in enumerate(images):
+                    if i > 0:
+                        printer.newPage()
+                    rect = painter.viewport()
+                    qtImage = ImageQt(image)
+                    qtImageScaled = qtImage.scaled(rect.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    painter.drawImage(rect, qtImageScaled)
+                painter.end()
 
 
 if __name__ == '__main__':
