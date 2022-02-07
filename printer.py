@@ -36,39 +36,19 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.print_button.clicked.connect(self.create_temp_file)
         self.ui.add_button.clicked.connect(self.add_event)
         self.ui.elements_view.itemDoubleClicked.connect(self.edit_event)
+        self.ui.edit_button.clicked.connect(self.edit)
         self.del_shortcut = QShortcut(QKeySequence('Shift+Del'), self)
         self.del_shortcut.activated.connect(self.delete_event)
 
     def add_event(self):
+        if self.check() is True:
+            pass
+        else:
+            return
         item_name = self.ui.name_edit.text()
-        if len(item_name) < 1:
-            self.check('empty_name')
-            return
-        elif len(item_name) > 40:
-            self.check('long_name')
-            return
-        else:
-            pass
         item_serial = self.ui.serial_edit.text().upper()
-        if len(item_serial) < 1:
-            self.check('empty_serial')
-            return
-        elif len(item_serial) > 30:
-            self.check('long_serial')
-            return
-        else:
-            pass
         item_warranty = self.ui.warranty_combo.currentText()
         item_price = self.ui.price_edit.text()
-        if len(item_price) < 1:
-            self.check('empty_price')
-            return
-        elif item_price.isdigit() is False:
-            self.check('letters_in_price')
-            self.ui.price_edit.clear()
-            return
-        else:
-            pass
         self.ui.elements_view.addItem(
             f'{item_name}#{item_serial}#{item_warranty}#{item_price}'
         )
@@ -81,14 +61,66 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.price_edit.clear()
 
     def edit_event(self):
-        pass
+        data = self.ui.elements_view.currentItem().text().split('#')
+        self.ui.name_edit.setText(data[0])
+        self.ui.serial_edit.setText(data[1])
+        self.ui.warranty_combo.setCurrentText(data[2])
+        self.ui.price_edit.setText(data[3])
+        self.ui.add_button.setVisible(False)
+        self.ui.edit_button.setVisible(True)
+
+    def edit(self):
+        index = self.ui.elements_view.currentRow()
+        item = self.ui.elements_view.currentItem()
+        if self.check() is True:
+            pass
+        else:
+            return
+        item_name = self.ui.name_edit.text()
+        item_serial = self.ui.serial_edit.text().upper()
+        item_warranty = self.ui.warranty_combo.currentText()
+        item_price = self.ui.price_edit.text()
+        item.setText(
+            f'{item_name}#{item_serial}#{item_warranty}#{item_price}'
+        )
+        self.print_data[index] = (
+            f'{item_name}#{item_serial}#{item_warranty}#{item_price}'
+        )
+        self.ui.name_edit.clear()
+        self.ui.serial_edit.clear()
+        self.ui.warranty_combo.setCurrentIndex(0)
+        self.ui.price_edit.clear()
+        self.ui.add_button.setVisible(True)
+        self.ui.edit_button.setVisible(False)
 
     def delete_event(self):
         item_index = self.ui.elements_view.currentIndex().row()
         self.print_data.__delitem__(item_index)
         self.ui.elements_view.takeItem(item_index)
 
-    def check(self, trouble):
+    def check(self):
+        if len(self.ui.name_edit.text()) < 1:
+            self.show_error('empty_name')
+            return False
+        elif len(self.ui.name_edit.text()) > 40:
+            self.show_error('long_name')
+            return False
+        elif len(self.ui.serial_edit.text()) < 1:
+            self.show_error('empty_serial')
+            return False
+        elif len(self.ui.serial_edit.text()) > 30:
+            self.show_error('long_serial')
+            return False
+        elif len(self.ui.price_edit.text()) < 1:
+            self.show_error('empty_price')
+            return False
+        elif self.ui.price_edit.text().isdigit() is False:
+            self.show_error('letters_in_price')
+            return False
+        else:
+            return True
+
+    def show_error(self, trouble):
         pattern = {
             'empty_name': 'Имя не может быть пустым.',
             'long_name': 'Имя не может быть больше 40 символов.',
