@@ -39,8 +39,9 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.edit_button.clicked.connect(self.edit)
         self.del_shortcut = QShortcut(QKeySequence('Shift+Del'), self)
         self.del_shortcut.activated.connect(self.delete_event)
-
-    def add_event(self) -> None: #Event to add item into QListWidget (only after pre-check)
+#Добавление товара, а так же его параметров в список
+#Введенные параметры проходят проверку при помощи метода "check"
+    def add_event(self) -> None:
         if self.check() is True:
             pass
         else:
@@ -59,8 +60,8 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.serial_edit.clear()
         self.ui.warranty_combo.setCurrentIndex(0)
         self.ui.price_edit.clear()
-
-    def edit_event(self) -> None: #Event for edit_button
+#Функционал для комбинации клавиш редактирования товара
+    def edit_event(self) -> None:
         data = self.ui.elements_view.currentItem().text().split('#')
         self.ui.name_edit.setText(data[0])
         self.ui.serial_edit.setText(data[1])
@@ -68,8 +69,9 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.price_edit.setText(data[3])
         self.ui.add_button.setVisible(False)
         self.ui.edit_button.setVisible(True)
-
-    def edit(self) -> None: #Edit item in QListWidget
+#Само редактирование товара
+#Так же проходит проверку при помощи метода "check"
+    def edit(self) -> None:
         index = self.ui.elements_view.currentRow()
         item = self.ui.elements_view.currentItem()
         if self.check() is True:
@@ -92,13 +94,15 @@ class Main_UI(QtWidgets.QMainWindow):
         self.ui.price_edit.clear()
         self.ui.add_button.setVisible(True)
         self.ui.edit_button.setVisible(False)
-
-    def delete_event(self) -> None: #Event to delete item from QListWidget
+#Удаление товара
+    def delete_event(self) -> None:
         item_index = self.ui.elements_view.currentIndex().row()
         self.print_data.__delitem__(item_index)
         self.ui.elements_view.takeItem(item_index)
-
-    def check(self) -> bool: #Pre-check event to except mistakes in item`s description
+#Проверка параметров на их отсутствие, а так же их длинну
+#Проверка на длинну, нужна для того что бы не разъехался шаблон и ничего не вылезло за пределы файла
+#Так же проверяется цена, что бы в ней присутствовали только числа
+    def check(self) -> bool:
         if len(self.ui.name_edit.text()) < 1:
             self.show_error('empty_name')
             return False
@@ -119,8 +123,9 @@ class Main_UI(QtWidgets.QMainWindow):
             return False
         else:
             return True
-
-    def show_error(self, trouble) -> None: #Execute message box show what`s wrong
+#Обработка ошибок
+#В методе присутствует словарь с возможными ошибками
+    def show_error(self, trouble) -> None:
         pattern = {
             'empty_name': 'Имя не может быть пустым.',
             'long_name': 'Имя не может быть больше 40 символов.',
@@ -136,8 +141,9 @@ class Main_UI(QtWidgets.QMainWindow):
         error.setWindowTitle('Ошибка')
         error.setText(pattern[trouble])
         error.exec_()
-
-    def create_temp_file(self) -> None: #Creating temp file for print event
+#Создание временного файла PDF
+#PDF был выбран ввиду того, что изначально программа генерировала док-ты для печати вручную
+    def create_temp_file(self) -> None:
         try:
             pdf = FPDF(orientation='P', unit='mm', format='A5')
             pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)
@@ -176,11 +182,14 @@ class Main_UI(QtWidgets.QMainWindow):
             self.ui.elements_view.clear()
             self.print_file()
             os.remove('temp.pdf')
+            self.print_data.clear()
         except PermissionError:
             self.check('pdf_opened')
             return
-
-    def print_file(self) -> None: #File print event
+#Собственно сама печать
+    def print_file(self) -> None:
+        with open('path.txt') as poppler:
+            poppler_path = poppler.readline().strip()
         printer = QPrinter(QPrinter.HighResolution)
         printer.setPaperSize(QPrinter.A5)
         printer.setPageSize(QPrinter.A5)
@@ -191,7 +200,7 @@ class Main_UI(QtWidgets.QMainWindow):
                     'temp.pdf',
                     dpi=600,
                     output_folder=path,
-                    poppler_path='C:\\poppler-0.68.0\\bin'
+                    poppler_path=f'{poppler_path}'
                     )
                 painter = QPainter()
                 painter.begin(printer)
