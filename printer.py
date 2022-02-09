@@ -186,36 +186,45 @@ class Main_UI(QtWidgets.QMainWindow):
         except PermissionError:
             self.check('pdf_opened')
             return
+        except Exception as e:
+            report = open('logs.txt', 'w')
+            report.write(f'\n{e}')
+            report.close()
 #Собственно сама печать
     def print_file(self) -> None:
-        with open('path.txt') as poppler:
-            poppler_path = poppler.readline().strip()
-        printer = QPrinter(QPrinter.HighResolution)
-        printer.setPaperSize(QPrinter.A5)
-        printer.setPageSize(QPrinter.A5)
-        dialog = QPrintDialog(printer, self)
-        if dialog.exec_() == QPrintDialog.Accepted:
-            with tempfile.TemporaryDirectory() as path:
-                images = convert_from_path(
-                    'temp.pdf',
-                    dpi=600,
-                    output_folder=path,
-                    poppler_path=f'{poppler_path}'
-                    )
-                painter = QPainter()
-                painter.begin(printer)
-                for i, image in enumerate(images):
-                    if i > 0:
-                        printer.newPage()
-                    rect = painter.viewport()
-                    qtImage = ImageQt(image)
-                    qtImageScaled = qtImage.scaled(
-                        rect.size(),
-                        Qt.KeepAspectRatio,
-                        Qt.SmoothTransformation
+        try:
+            with open('path.txt') as poppler:
+                poppler_path = poppler.readline().strip()
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setPaperSize(QPrinter.A5)
+            printer.setPageSize(QPrinter.A5)
+            dialog = QPrintDialog(printer, self)
+            if dialog.exec_() == QPrintDialog.Accepted:
+                with tempfile.TemporaryDirectory() as path:
+                    images = convert_from_path(
+                        'temp.pdf',
+                        dpi=600,
+                        output_folder=path,
+                        poppler_path=f'{poppler_path}'
                         )
-                    painter.drawImage(rect, qtImageScaled)
-                painter.end()
+                    painter = QPainter()
+                    painter.begin(printer)
+                    for i, image in enumerate(images):
+                        if i > 0:
+                            printer.newPage()
+                        rect = painter.viewport()
+                        qtImage = ImageQt(image)
+                        qtImageScaled = qtImage.scaled(
+                            rect.size(),
+                            Qt.KeepAspectRatio,
+                            Qt.SmoothTransformation
+                            )
+                        painter.drawImage(rect, qtImageScaled)
+                    painter.end()
+        except Exception as e:
+            report = open('logs.txt', 'w')
+            report.write(f'\n{e}')
+            report.close()
 
 
 if __name__ == '__main__':
